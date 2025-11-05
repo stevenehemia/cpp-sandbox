@@ -9,7 +9,8 @@ class Debtor {
         string name;
         string address;
         vector<Contract*> contracts;
-        vector<double> loans;
+        vector<Loan*> loans;
+        vector<Car> ownedCars;
     public:
         // Constructor
         Debtor(string n, string ad):
@@ -22,15 +23,16 @@ class Debtor {
         // Concrete methods
         double totalLoans() const {
             double sum = 0.0;
-            for(double l : loans) {
-                sum += l;
+            for(Loan* l : loans) {
+                sum = sum + l->getRemainingAmount();
             }
             return sum;
         }
         virtual void applyLoan(Bank& b, Car& c) {
             if (b.grantLoan(disposableIncome(), c)) {
                 sendAcceptance();
-                loans.push_back(c.price());
+                Loan newLoan(this, &b, c.price());
+                loans.push_back(&newLoan);
             } else {
                 cout << "Not eligible for loan";
             }
@@ -42,12 +44,7 @@ class Debtor {
 
 class Person: public Debtor {
     private:
-        string name;
-        string address;
         int age;
-        vector<Contract*> contracts;
-        vector<Car> ownedCars;
-        vector<double> loans;
     public:
         // Constructor
         Person(string n, string ad, int ag):
@@ -89,11 +86,7 @@ class Person: public Debtor {
 
 class Company: public Debtor {
     private:
-        string name;
-        string address;
         double turnover;
-        vector<Contract*> contracts;
-        vector<double> loans;
     public:
         // Constructor
         Company(string n, string ad, double t):
@@ -188,3 +181,20 @@ class Car {
         }
 };
 
+class Loan {
+    private:
+        Debtor* borrower;
+        Bank* lender;
+        double loanAmount;
+        double remainingAmount;
+    public:
+        // Constructor
+        Loan(Debtor* b, Bank* l, double la)
+            : borrower(b), lender(l), loanAmount(la), remainingAmount(la) {}
+        
+        // Getters
+        Debtor* getBorrower() const { return borrower; }
+        Bank* getLender() const { return lender; }
+        double getLoanAmount() const { return loanAmount; }
+        double getRemainingAmount() const { return remainingAmount; }
+};
