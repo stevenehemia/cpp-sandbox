@@ -33,6 +33,7 @@ class Debtor {
                 sendAcceptance();
                 Loan newLoan(this, &b, c.price());
                 loans.push_back(&newLoan);
+                ownedCars.push_back(c);
             } else {
                 cout << "Not eligible for loan";
             }
