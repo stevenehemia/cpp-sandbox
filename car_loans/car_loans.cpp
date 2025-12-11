@@ -30,16 +30,18 @@ class Debtor {
         }
         virtual void applyLoan(Bank& b, Car& c) {
             if (b.grantLoan(disposableIncome(), c)) {
-                sendAcceptance();
-                Loan newLoan(this, &b, c.price());
-                loans.push_back(&newLoan);
-                ownedCars.push_back(c);
+                cout << "You've successfully applied for the loan";
             } else {
                 cout << "Not eligible for loan";
             }
         }
-        void sendAcceptance() {
+
+        void acceptLoan(Loan* l) {
             cout << "Loan accepted";
+	    Loan newLoan(this, &b, c.price());
+            loans.push_back(&newLoan);
+            ownedCars.push_back(c);
+            loans.status = accepted/rejected/pending/bankrupt
         }
 };
 
@@ -199,3 +201,8 @@ class Loan {
         double getLoanAmount() const { return loanAmount; }
         double getRemainingAmount() const { return remainingAmount; }
 };
+
+int main() {
+	george.applyLoan();
+	george.acceptLoan();
+}
