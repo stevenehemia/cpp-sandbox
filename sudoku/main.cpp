@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdio>
+#include <vector>
 #include "sudoku.h"
 
 using namespace std;
@@ -136,6 +137,6 @@ int main() {
 
   // write more tests
 
-
+  
   return 0;
 }
