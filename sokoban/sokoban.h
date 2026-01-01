@@ -1,10 +1,10 @@
 // uncomment to activate simple test cases
-#define SIMPLE_TEST
+// #define SIMPLE_TEST
 
 // uncomment to animate solutions (requires make_move)
-#define ANIMATE_SOLUTION
+// #define ANIMATE_SOLUTION
 
-#define SCREEN_HEIGHT 25
+#define SCREEN_HEIGHT 5
 
 #define MAX_SOLUTION_LENGTH 12800
 
@@ -28,5 +28,9 @@ void animate_solution(char **level, int height, int width, const char *solution)
 
 int goal_squares_without_boxes(char **level, int height, int width);
 bool find_player(char **level, int height, int width, int &row, int &column);
-bool make_move(char **level, int height, int width, char dir, bool is_push);
+bool make_move(char **level, int height, int width, char dir, bool &is_push);
 bool solve_level(char **level, int height, int width, char *solution);
+bool search_solution(char **level, int height, int width, char *solution, set<uint64_t> &visited);
+void copy_level(char **dst, char **src, int height, int width);
+void set_direction(char dir, int &dx, int &dy);
+bool is_cornered(char **level, int height, int width);

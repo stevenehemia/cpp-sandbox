@@ -156,6 +156,10 @@ void animate_solution(char **level, int height, int width, const char *solution)
 
 /* add your own function definitions here */
 
+#include <set>
+
+const char MOVES[] = { 'u', 'r', 'd', 'l' };
+
 int goal_squares_without_boxes(char **level, int height, int width) {
 
     int count = 0;
@@ -173,8 +177,7 @@ bool find_player(char **level, int height, int width, int &row, int &column) {
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             if (level[i][j] == '@' || level[i][j] == '+') {
-                row = i;
-                column = j;
+                row = i; column = j;
                 return true;
             }
         }
@@ -183,22 +186,15 @@ bool find_player(char **level, int height, int width, int &row, int &column) {
 }
 
 
-bool make_move(char **level, int height, int width, char dir, bool is_push) {
+bool make_move(char **level, int height, int width, char dir, bool &is_push) {
 
     int src_col, src_row;
     if (!find_player(level, height, width, src_row, src_col)) { return false; }
 
     int dx = 0, dy = 0;
-    int dst_col = src_col;
-    int dst_row = src_row;
-    switch (dir) {
-        case 'l': dx = -1; break;
-        case 'r': dx = 1; break;
-        case 'd': dy = 1; break;
-        case 'u': dy = -1; break;
-    }
-    dst_row += dy;
-    dst_col += dx;
+    set_direction(dir, dx, dy);
+    int dst_col = src_col + dx;
+    int dst_row = src_row + dy;
 
     if(dst_col < 0 || dst_col > width) { return false; }
     if(dst_row < 0 || dst_row > height) { return false; }
@@ -226,28 +222,95 @@ bool make_move(char **level, int height, int width, char dir, bool is_push) {
     return true;
 }
 
+
 bool solve_level(char **level, int height, int width, char *solution) {
+
+    set<uint64_t> visited;
+
+    return search_solution(level, height, width, solution, visited);
+}
+
+
+bool search_solution(char **level, int height, int width, char *solution, set<uint64_t> &visited) {
+
     if (goal_squares_without_boxes(level, height, width) == 0 ||
         strlen(solution) > MAX_SOLUTION_LENGTH) {
             return true;
     }
 
-    bool is_push = false;
+    for (char move : MOVES) {
 
-    const char MOVES[] = { 'l', 'r', 'd', 'u' };
+        char **backup = allocate_2D_array(height, width);
+        copy_level(backup, level, height, width);
+        bool is_push = false;
 
-    for (char m : MOVES) {
-        if(make_move(level, height, width, m, is_push)) {
-            if (is_push) { m = toupper(m); }
-            char str[2] = { m, '\0' };
-            strcat(solution, str);
-            if(solve_level(level, height, width, solution)) {
-                return true;
-            } else {
-                
+        if(make_move(level, height, width, move, is_push)) {
+
+            uint64_t current_hash = level_hash(level, height, width);
+
+            if (visited.count(current_hash) || is_cornered(level, height, width)) {
+                copy_level(level, backup, height, width);   
+                continue;
+            }
+
+            visited.insert(current_hash);
+            if (is_push) { move = toupper(move); }
+            int len = strlen(solution);
+            solution[len] = move;
+            solution[len + 1] = '\0';
+
+            if(search_solution(level, height, width, solution, visited)) { return true; }
+
+            solution[len] = '\0';
+            copy_level(level, backup, height, width);
+        }
+        
+        deallocate_2D_array(backup, height);
+    }
+
+    return false;
+}
+
+
+void copy_level(char **dst, char **src, int height, int width) {
+    for (int r = 0; r < height; r++) {
+        for (int c = 0; c < width; c++) {
+            dst[r][c] = src[r][c];
+        }
+    }
+}
+
+
+void set_direction(char dir, int &dx, int &dy) {
+    switch (dir) {
+        case 'l': dx = -1; dy = 0; break;
+        case 'r': dx = 1; dy = 0; break;
+        case 'd': dx = 0; dy = 1; break;
+        case 'u': dx = 0; dy = -1; break;
+    }
+}
+
+bool is_cornered(char **level, int height, int width) {
+    for (int r = 0; r < height; r++) {
+        for (int c = 0; c < width; c++) {
+            if (level[r][c] == '$') {
+                for (int i = 0; i < 4; i++) {
+                    int dx = 0, dy = 0;
+                    int idx = i;
+                    set_direction(MOVES[idx], dx, dy);
+                    int pos1_row = r + dy;
+                    int pos1_col = c + dx;
+                    idx = i == 3 ? 0 : i + 1;
+                    set_direction(MOVES[idx], dx, dy);
+                    int pos2_row = r + dy;
+                    int pos2_col = c + dx;
+                    if (level[pos1_row][pos1_col] == '#' &&
+                        level[pos2_row][pos2_col] == '#') {
+                        return true;
+                    }
+                }
             }
         }
     }
-
     return false;
 }
